@@ -1,10 +1,10 @@
-
 import React, { useState } from "react";
-import { Check, X } from "lucide-react";
+import { Check, X, Shield, Lock, Unlock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Toggle } from "@/components/ui/toggle";
 import {
   Table,
   TableBody,
@@ -158,144 +158,139 @@ const RolePermissionsManager: React.FC<RolePermissionsManagerProps> = ({ onChang
     });
   };
 
+  // Function to render permission status with better UI
+  const renderPermissionStatus = (permissionId: string, roleId: string, type: "canUse" | "canCreateUpdate") => {
+    const isGranted = permissionsData[permissionId]?.[roleId]?.[type];
+    
+    return (
+      <div 
+        onClick={() => handleTogglePermission(permissionId, roleId, type)}
+        className={cn(
+          "flex items-center justify-center py-2 px-4 rounded-lg transition-all duration-300 cursor-pointer transform hover:scale-105",
+          isGranted 
+            ? "bg-gradient-to-r from-green-500/90 to-emerald-600/90 text-white shadow-md" 
+            : "bg-gradient-to-r from-gray-200 to-gray-300 text-gray-600",
+        )}
+      >
+        <div className="flex items-center gap-2">
+          {isGranted ? (
+            <>
+              <Shield className="h-4 w-4" />
+              <span className="font-medium">{type === "canUse" ? "Allowed" : "Can Edit"}</span>
+            </>
+          ) : (
+            <>
+              <Lock className="h-4 w-4" />
+              <span className="font-medium">{type === "canUse" ? "Restricted" : "No Edit"}</span>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="relative overflow-hidden rounded-lg border">
       <div className="overflow-x-auto" style={{ maxHeight: "calc(100vh - 250px)" }}>
-        <div className="relative">
-          <Table>
-            <TableHeader className="sticky top-0 z-20">
-              <TableRow>
-                <TableHead className="sticky left-0 z-30 bg-gray-700 text-white w-64 min-w-[16rem]">
-                  <div className="px-6 py-4 text-sm font-medium uppercase tracking-wider">
-                    Action
-                  </div>
-                </TableHead>
-                {roles.map((role) => (
-                  <TableHead 
-                    key={role.id} 
-                    colSpan={2}
-                    className={`${role.color} z-20`}
-                  >
-                    <div className="flex flex-col gap-1 items-center px-6 py-3">
-                      <span className="font-medium uppercase tracking-wider text-sm">{role.name}</span>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Badge variant="outline" className="bg-white/60 text-xs font-normal">
-                              {role.description}
-                            </Badge>
-                          </TooltipTrigger>
-                          <TooltipContent className="max-w-xs">
-                            <p>{role.description}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                  </TableHead>
-                ))}
-              </TableRow>
-              <TableRow className="bg-gray-100">
-                <TableHead className="sticky left-0 z-30 bg-gray-100"></TableHead>
-                {roles.map((role) => (
-                  <React.Fragment key={`header-${role.id}`}>
-                    <TableHead className="px-6 py-2 text-center text-xs font-medium text-gray-600 uppercase tracking-wider">
-                      Can Use
-                    </TableHead>
-                    <TableHead className="px-6 py-2 text-center text-xs font-medium text-gray-600 uppercase tracking-wider">
-                      Can Create/Update
-                    </TableHead>
-                  </React.Fragment>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {permissions.map((permission) => (
-                <TableRow 
-                  key={permission.id} 
-                  className={cn(
-                    "transition-colors",
-                    hoveredRow === permission.id ? "bg-blue-50" : "",
-                    activePermission === permission.id ? "bg-blue-50" : ""
-                  )}
-                  onMouseEnter={() => {
-                    setActivePermission(permission.id);
-                    setHoveredRow(permission.id);
-                  }}
-                  onMouseLeave={() => {
-                    setActivePermission(null);
-                    setHoveredRow(null);
-                  }}
+        <Table className="relative">
+          <TableHeader>
+            {/* First header row with role names - sticky at top */}
+            <TableRow className="sticky top-0 z-30 bg-white shadow-sm">
+              <TableHead className="sticky left-0 z-40 bg-gray-700 text-white w-64 min-w-[16rem] border-r-2 border-gray-600">
+                <div className="px-6 py-4 text-sm font-medium uppercase tracking-wider">
+                  Action
+                </div>
+              </TableHead>
+              {roles.map((role) => (
+                <TableHead 
+                  key={role.id} 
+                  colSpan={2}
+                  className={`${role.color} z-30`}
                 >
-                  <TableCell 
-                    className={cn(
-                      "sticky left-0 z-10 whitespace-nowrap font-medium bg-gray-700 text-white",
-                      (activePermission === permission.id || hoveredRow === permission.id) ? "border-r-4 border-blue-500" : ""
-                    )}
-                  >
+                  <div className="flex flex-col gap-1 items-center px-6 py-3">
+                    <span className="font-medium uppercase tracking-wider text-sm">{role.name}</span>
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className="px-6 py-4">{permission.name}</div>
+                          <Badge variant="outline" className="bg-white/60 text-xs font-normal">
+                            {role.description}
+                          </Badge>
                         </TooltipTrigger>
-                        <TooltipContent side="right" className="max-w-xs bg-gray-800 text-white">
-                          <p>{permission.description}</p>
+                        <TooltipContent className="max-w-xs">
+                          <p>{role.description}</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
-                  </TableCell>
-                  {roles.map((role) => (
-                    <React.Fragment key={`${permission.id}-${role.id}`}>
-                      <TableCell className="px-6 py-4 whitespace-nowrap text-center">
-                        <button
-                          onClick={() => handleTogglePermission(permission.id, role.id, "canUse")}
-                          className={cn(
-                            "h-10 w-10 rounded-full flex items-center justify-center transition-all transform hover:scale-110",
-                            permissionsData[permission.id]?.[role.id]?.canUse
-                              ? "bg-green-500 text-white hover:bg-green-600 shadow-md"
-                              : "bg-gray-300 text-gray-500 hover:bg-red-500 hover:text-white"
-                          )}
-                          aria-label={
-                            permissionsData[permission.id]?.[role.id]?.canUse
-                              ? "Permission granted"
-                              : "Permission denied"
-                          }
-                        >
-                          {permissionsData[permission.id]?.[role.id]?.canUse ? (
-                            <Check className="h-6 w-6" />
-                          ) : (
-                            <X className="h-6 w-6" />
-                          )}
-                        </button>
-                      </TableCell>
-                      <TableCell className="px-6 py-4 whitespace-nowrap text-center">
-                        <button
-                          onClick={() => handleTogglePermission(permission.id, role.id, "canCreateUpdate")}
-                          className={cn(
-                            "h-10 w-10 rounded-full flex items-center justify-center transition-all transform hover:scale-110",
-                            permissionsData[permission.id]?.[role.id]?.canCreateUpdate
-                              ? "bg-green-500 text-white hover:bg-green-600 shadow-md"
-                              : "bg-gray-300 text-gray-500 hover:bg-red-500 hover:text-white"
-                          )}
-                          aria-label={
-                            permissionsData[permission.id]?.[role.id]?.canCreateUpdate
-                              ? "Permission granted"
-                              : "Permission denied"
-                          }
-                        >
-                          {permissionsData[permission.id]?.[role.id]?.canCreateUpdate ? (
-                            <Check className="h-6 w-6" />
-                          ) : (
-                            <X className="h-6 w-6" />
-                          )}
-                        </button>
-                      </TableCell>
-                    </React.Fragment>
-                  ))}
-                </TableRow>
+                  </div>
+                </TableHead>
               ))}
-            </TableBody>
-          </Table>
-        </div>
+            </TableRow>
+            
+            {/* Second header row with permission types - also sticky */}
+            <TableRow className="sticky top-[72px] z-20 bg-gray-100 shadow-sm">
+              <TableHead className="sticky left-0 z-30 bg-gray-100 border-r-2 border-gray-300"></TableHead>
+              {roles.map((role) => (
+                <React.Fragment key={`header-${role.id}`}>
+                  <TableHead className="px-6 py-2 text-center text-xs font-medium text-gray-600 uppercase tracking-wider bg-opacity-90 backdrop-blur-sm">
+                    Can Use
+                  </TableHead>
+                  <TableHead className="px-6 py-2 text-center text-xs font-medium text-gray-600 uppercase tracking-wider bg-opacity-90 backdrop-blur-sm">
+                    Can Create/Update
+                  </TableHead>
+                </React.Fragment>
+              ))}
+            </TableRow>
+          </TableHeader>
+          
+          <TableBody>
+            {permissions.map((permission) => (
+              <TableRow 
+                key={permission.id} 
+                className={cn(
+                  "transition-colors",
+                  hoveredRow === permission.id ? "bg-blue-50" : "",
+                  activePermission === permission.id ? "bg-blue-50" : ""
+                )}
+                onMouseEnter={() => {
+                  setActivePermission(permission.id);
+                  setHoveredRow(permission.id);
+                }}
+                onMouseLeave={() => {
+                  setActivePermission(null);
+                  setHoveredRow(null);
+                }}
+              >
+                <TableCell 
+                  className={cn(
+                    "sticky left-0 z-10 whitespace-nowrap font-medium bg-gray-700 text-white",
+                    (activePermission === permission.id || hoveredRow === permission.id) ? "border-r-4 border-blue-500" : "border-r-2 border-gray-600"
+                  )}
+                >
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="px-6 py-4">{permission.name}</div>
+                      </TooltipTrigger>
+                      <TooltipContent side="right" className="max-w-xs bg-gray-800 text-white">
+                        <p>{permission.description}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </TableCell>
+                {roles.map((role) => (
+                  <React.Fragment key={`${permission.id}-${role.id}`}>
+                    <TableCell className="px-4 py-3 whitespace-nowrap">
+                      {renderPermissionStatus(permission.id, role.id, "canUse")}
+                    </TableCell>
+                    <TableCell className="px-4 py-3 whitespace-nowrap">
+                      {renderPermissionStatus(permission.id, role.id, "canCreateUpdate")}
+                    </TableCell>
+                  </React.Fragment>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </div>
       <div className="p-4 bg-gray-50 border-t border-gray-200 text-center text-sm text-gray-600">
         Click on permission toggles to grant or deny access for each role

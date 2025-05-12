@@ -3,6 +3,7 @@ import { useState } from "react";
 import RolePermissionsManager from "../components/RolePermissionsManager";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "sonner";
+import { toast } from "sonner";
 
 const Index = () => {
   const [unsavedChanges, setUnsavedChanges] = useState(false);
@@ -33,7 +34,12 @@ const Index = () => {
           <div className="flex gap-3">
             <Button 
               variant="outline" 
-              onClick={() => setUnsavedChanges(false)}
+              onClick={() => {
+                setUnsavedChanges(false);
+                toast.info("Changes reset", {
+                  description: "All changes have been reset to their initial state.",
+                });
+              }}
               disabled={!unsavedChanges}
               className="border-blue-500 text-blue-500 hover:bg-blue-50 transition-all"
             >
@@ -42,9 +48,7 @@ const Index = () => {
             <Button 
               onClick={() => {
                 setUnsavedChanges(false);
-                // Show success toast when changes are saved
-                window.toast({
-                  title: "Changes saved",
+                toast.success("Changes saved", {
                   description: "Your permission changes have been applied successfully.",
                 });
               }}
